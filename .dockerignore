@@ -2,7 +2,6 @@
 .gitignore
 node_modules
 vendor
-config/database.php
 .env
 *.log
 tmp

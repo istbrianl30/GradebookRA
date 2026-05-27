@@ -18,22 +18,17 @@ $database_url = getenv('DATABASE_URL');
 if ($database_url && trim($database_url) !== '') {
     $uri = $database_url;
 } else {
-    $dbHost = getenv('DB_HOST');
-    if ($dbHost && trim($dbHost) !== '') {
-        $dbUser = getenv('DB_USER') ?: '';
-        $dbPass = getenv('DB_PASS') ?: '';
-        $dbName = getenv('DB_NAME') ?: '';
-        $dbPort = getenv('DB_PORT') ?: '3306';
-        $dbSsl  = getenv('DB_SSLMODE') ?: 'REQUIRED';
+    $dbHost = getenv('DB_HOST') ?: 'localhost';
+    $dbUser = getenv('DB_USER') ?: 'root';
+    $dbPass = getenv('DB_PASS') ?: '';
+    $dbName = getenv('DB_NAME') ?: 'gradebook'; // Default database name
+    $dbPort = getenv('DB_PORT') ?: '3306';
+    $dbSsl  = getenv('DB_SSLMODE') ?: 'DISABLED'; // Disable SSL for local dev
 
-        // Build a DATABASE_URL-style URI so the rest of the code can parse it
-        $uri = sprintf('mysql://%s:%s@%s:%s/%s?ssl-mode=%s',
-            rawurlencode($dbUser), rawurlencode($dbPass), $dbHost, $dbPort, $dbName, $dbSsl
-        );
-    } else {
-        // No environment configuration found. Fail fast with an explanatory message.
-        throw new Exception("Database configuration not found. Set DATABASE_URL or DB_HOST/DB_USER/DB_PASS/DB_NAME environment variables.");
-    }
+    // Build a DATABASE_URL-style URI so the rest of the code can parse it
+    $uri = sprintf('mysql://%s:%s@%s:%s/%s?ssl-mode=%s',
+        rawurlencode($dbUser), rawurlencode($dbPass), $dbHost, $dbPort, $dbName, $dbSsl
+    );
 }
 
 $fields = parse_url($uri);
@@ -42,7 +37,7 @@ if ($fields === false || !isset($fields['host'])) {
 }
 
 // Determine path (database name)
-$dbName = isset($fields['path']) ? ltrim($fields['path'], '/') : '';
+$dbName = isset($fields['path']) ? ltrim($fields['path'], '/') : 'gradebook';
 
 // Resolve CA path relative to project root (assumes ca.pem is in project root)
 $caPath = __DIR__ . '/../ca.pem';
@@ -56,7 +51,7 @@ if (!file_exists($caPath)) {
 $dsn = sprintf('mysql:host=%s;port=%s;dbname=%s', $fields['host'], $fields['port'] ?? '3306', $dbName);
 // Append SSL options if CA exists - PDO MySQL uses PDO::MYSQL_ATTR_SSL_CA when creating the PDO instance
 
-$username = $fields['user'] ?? '';
+$username = $fields['user'] ?? 'root';
 $password = $fields['pass'] ?? '';
 
 try {
